@@ -1,11 +1,11 @@
 package simplengine
 package datastore
 
-import com.google.appengine.datastore.{
+import com.google.appengine.api.datastore.{
   Entity => GEntity
 }
 
-case class Entity(entity: GEntity) {
+case class Entity(kind: Kind, entity: GEntity) {
   def key = entity.getKey()
 
   def parent = entity.getParent()
@@ -14,8 +14,17 @@ case class Entity(entity: GEntity) {
 
   def set[A](prop: String, value: A) = {
     entity.setProperty(prop, value)
-    entity
+    this
   }
 
   def has(prop: String) = entity.hasProperty(prop)
+
+  def remove(prop: String) = {
+    entity.removeProperty(prop)
+    this
+  }
+
+  def appId = entity.getAppId
+
+  def namespace = entity.getNamespace
 }

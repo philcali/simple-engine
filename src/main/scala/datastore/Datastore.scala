@@ -14,17 +14,16 @@ object Datastore {
 
   implicit val asnyc = DatastoreServiceFactory.getAsyncDatastoreService()
 
-  implicit def toEntity(entity: GEntity) = Entity(entity)
-
-  def entity(kind: Kind, key: Option[Key] = None) = {
-    key.map(new GEntity(_)).getOrElse(new GEntity(kind.simpleName))
+  def entity(kind: Kind, key: Option[Key] = None): Entity = {
+    val en = key.map(new GEntity(_)).getOrElse(new GEntity(kind.simpleName))
+    Entity(kind, en)
   }
 
-  def save(en: GEntity)(implicit ds: DatastoreService) = ds.put(en)
+  def save(en: Entity)(implicit ds: DatastoreService) = ds.put(en.entity)
 
   def query(kind: Kind) = {
     val q = new Query(kind.simpleName)
-    DataDsl(q)
+    DataDsl(kind, q)
   }
 }
 
