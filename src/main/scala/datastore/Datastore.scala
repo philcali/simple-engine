@@ -18,7 +18,7 @@ object Datastore {
   implicit val asnyc = DatastoreServiceFactory.getAsyncDatastoreService()
 
   def entity[A <: Kind](kind: A, key: Option[Key] = None)(implicit ds: DatastoreService) = {
-    val en = key.map(new GEntity(_)).getOrElse(new GEntity(kind.simpleName))
+    val en = key.map(new GEntity(kind.simpleName,_)).getOrElse(new GEntity(kind.simpleName))
     
     new Entity[A](kind, en)
   }

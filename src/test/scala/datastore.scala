@@ -14,7 +14,6 @@ import com.google.appengine.tools.development.testing.{
 }
 
 class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
-
   val helper = new LocalHelper(new LocalConfig())
 
   import Datastore.service
@@ -75,10 +74,26 @@ class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
   }
 
   it should "delete entries by key" in {
-    val dudeKey = Person key 3
+    val dudeKey = Person key 1
 
     Datastore delete dudeKey
 
     Datastore get (Person, dudeKey) should be === None
+  }
+
+  it should "handle hierarchial keys" in {
+    val dad = Datastore entity Person set (
+      _.firstname := "Dominic", _.lastname := "Cali", _.age := 59
+    )
+
+    val dadKey = Datastore save dad
+
+    val brother = Datastore entity (Person, Some(dadKey)) set (
+      _.firstname := "Joseph", _.lastname := "Cali", _.age := 28
+    )
+
+    Datastore save brother
+
+    brother.parent should be === dadKey
   }
 }
