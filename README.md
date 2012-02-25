@@ -10,7 +10,7 @@ though there are some notable differences.
 
 __Similarities__:
 
-- Immutable
+- Immutable data types
 - Type safe
 
 __Differences__:
@@ -94,7 +94,7 @@ people where (_.lastname is "Cali") fetch(_.limit(10)) map Person.fullname forea
 The `Int` type does not come over one for one, unfortunately. Should you absolutely
 need Integers, then you can make use of the `IntegerConversion` mixin for `Property[Int]`.
 
-I would look something like:
+It would look something like:
 
 ```
 val age = new Property[Int]("age") with IntegerConversion // now it'll work!
