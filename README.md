@@ -17,6 +17,7 @@ __Differences__:
 
 - Developer only needs to define an Entity kind once
 - `highchair` makes heavy use of reflection, `simple-engine` solely uses generics
+- `highchair` auto maps property types with implicits which is freaking sweet, `simple-engine` stays far away from implicits
 
 ## Usage
 
@@ -99,5 +100,10 @@ It would look something like:
 ```
 val age = new Property[Int]("age") with IntegerConversion // now it'll work!
 ```
+
+## The Future
+
+The project is currently in _proof of concept_ stage for other things. I don't
+know about the future of this project as it currently stands.
 
 [highchair]: https://github.com/chrislewis/highchair
