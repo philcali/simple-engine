@@ -15,56 +15,70 @@ import com.google.appengine.tools.development.testing.{
 
 class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
 
-  lazy val helper = new LocalHelper(new LocalConfig())
+  val helper = new LocalHelper(new LocalConfig())
+
+  import Datastore.service
 
   before {
     helper.setUp()
+
+    val people = List(
+      Map("firstname" -> "Philip", "lastname" -> "Cali", "age" -> 26),
+      Map("firstname" -> "Anna", "lastname" -> "Cali", "age" -> 24)
+    )
+
+    people.foreach { p =>
+      val person = Datastore entity Person set(
+        _.firstname := p("firstname").toString,
+        _.lastname := p("lastname").toString,
+        _.age := p("age").toString.toInt
+      )
+
+      Datastore save person
+    }
   }
 
   after {
     helper.tearDown()
   }
 
-  import Datastore.service
-
-  object Person extends Kind
-
-  case class Person(firstname: String, lastname: String, age: Int)
-
-  val people = List(
-    Person("Philip", "Cali", 26),
-    Person("Anna", "Cali", 24)
-  )
-
-  "Datastore" should "save persons" in {
-    people.foreach { p =>
-      val person = Datastore entity Person
-      Datastore.save(
-        person.set("firstname", p.firstname)
-              .set("lastname", p.lastname)
-              .set("age", p.age)
-      )
-    }
-
-    val pquery = Datastore query Person
-
-    val philip = pquery where "age" >== 25
-    val anna = pquery where "firstname" is "Anna"
-    val all = pquery fetch()
-
-    all.size should be === 2
-    philip.fetch().size should be === 1
-    anna.fetch().size should be === 1
+  object Person extends Kind {
+    val firstname = Property[String]("firstname")
+    val lastname = Property[String]("lastname")
+    val age = Property[Long]("age")
   }
 
-  "Entities" should "know their kind" in {
-    val dude = Datastore entity Person
-    Datastore.save(
-      dude.set("firstname", "Dude").set("lastname", "Random")
+  "Datastore" should "save persons" in {
+    val dude = Datastore entity Person set(
+      _.firstname := "Some", _.lastname := "Dude", _.age := 97
     )
 
-    val query = Datastore query Person where "firstname" is "Dude"
-    
-    query.one().get.kind should be === Person
+    Datastore save dude
+
+    val stored = Datastore get (Person, Person key 3) get
+
+    stored(_.firstname) should be === "Some"
+    stored(_.lastname) should be === "Dude"
+    stored(_.age) should be === 97
+
+    stored as (_ => "Woot!") should be === "Woot!"
+  }
+
+  it should "find all the stored results" in {
+    val people = Datastore find Person
+
+    val calis = people where (_.lastname is "Cali")
+    val philip = calis and (_.firstname is "Philip")
+
+    calis.fetch().size should be === 2
+    philip.fetch().head(_.age) should be === 26
+  }
+
+  it should "delete entries by key" in {
+    val dudeKey = Person key 3
+
+    Datastore delete dudeKey
+
+    Datastore get (Person, dudeKey) should be === None
   }
 }

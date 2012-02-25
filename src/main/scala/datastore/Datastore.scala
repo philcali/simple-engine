@@ -2,28 +2,37 @@ package simplengine
 package datastore
 
 import com.google.appengine.api.datastore.{
+  EntityNotFoundException,
   DatastoreService,
   DatastoreServiceFactory,
   Key,
   Entity => GEntity,
-  Query
+  Query => GQuery
 }
+
+import util.control.Exception.allCatch
 
 object Datastore {
   implicit val service = DatastoreServiceFactory.getDatastoreService()
 
   implicit val asnyc = DatastoreServiceFactory.getAsyncDatastoreService()
 
-  def entity(kind: Kind, key: Option[Key] = None): Entity = {
+  def entity[A <: Kind](kind: A, key: Option[Key] = None)(implicit ds: DatastoreService) = {
     val en = key.map(new GEntity(_)).getOrElse(new GEntity(kind.simpleName))
-    Entity(kind, en)
+    
+    new Entity[A](kind, en)
   }
 
-  def save(en: Entity)(implicit ds: DatastoreService) = ds.put(en.entity)
+  def get[A <: Kind](kind: A, key: Key)(implicit ds: DatastoreService) = {
+    allCatch.opt(new Entity[A](kind, ds.get(key)))
+  }
 
-  def query(kind: Kind) = {
-    val q = new Query(kind.simpleName)
-    DataDsl(kind, q)
+  def save(en: Entity[_])(implicit ds: DatastoreService) = ds.put(en.entity)
+
+  def delete(keys: Key*)(implicit ds: DatastoreService) = ds.delete(keys: _*)
+
+  def find[A <: Kind](kind: A) = {
+    new Query[A](kind, new GQuery(kind.simpleName))
   }
 }
 

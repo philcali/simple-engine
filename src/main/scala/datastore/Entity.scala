@@ -5,26 +5,33 @@ import com.google.appengine.api.datastore.{
   Entity => GEntity
 }
 
-case class Entity(kind: Kind, entity: GEntity) {
-  def key = entity.getKey()
+class Entity[A <: Kind](k: A, en: GEntity) {
+  def key = en.getKey()
 
-  def parent = entity.getParent()
+  def kind = k
 
-  def get[A](name: String) = entity.getProperty(name).asInstanceOf[A]
+  def entity = en.clone()
 
-  def set[A](prop: String, value: A) = {
-    entity.setProperty(prop, value)
-    this
+  def clone(f: GEntity => Unit) = {
+    val e = entity
+    f(e)
+    new Entity[A](k, e)
   }
 
-  def has(prop: String) = entity.hasProperty(prop)
+  def parent = en.getParent()
 
-  def remove(prop: String) = {
-    entity.removeProperty(prop)
-    this
+  def appId = en.getAppId
+
+  def namespace = en.getNamespace
+
+  def set(funs: (A => Entity[A] => Entity[A])*) = {
+    funs.foldLeft(this) { (in, fun) => fun(k)(in) }
   }
 
-  def appId = entity.getAppId
+  def apply[B](fun: (A => PropConversion[B])) = {
+    val prop = fun(k)
+    prop.fromDatastore(en.getProperty(prop.name))
+  }
 
-  def namespace = entity.getNamespace
+  def as[B](fun: Entity[A] => B) = fun(this)
 }
