@@ -26,10 +26,29 @@ trait IntegerConversion extends PropConversion[Int] {
   override def fromDatastore(value: Any) = value.toString.toInt
 }
 
-trait Kind {
+trait Kind extends DatastoreIntegration {
   def simpleName = this.getClass.getSimpleName
 
   def key(id: Long) = KeyFactory.createKey(simpleName, id)
 
   def parent(key: Key, id: Long) = KeyFactory.createKey(key, simpleName, id)
 }
+
+trait DatastoreIntegration { self: Kind =>
+  type Self = self.type
+
+  def where = Datastore find self.asInstanceOf[Self] where _
+
+  def get(key: Key)(implicit ds: DatastoreService) =
+    Datastore get (self.asInstanceOf[Self], key)
+
+  def entity(key: Option[Key] = None)(implicit ds: DatastoreService) = {
+    Datastore entity (self.asInstanceOf[Self], key)
+  }
+
+  def save(en: Entity[Self])(implicit ds: DatastoreService) =
+    Datastore save en 
+
+  def delete(keys: Key*)(implicit ds: DatastoreService) =
+    Datastore delete (keys: _*)
+} 

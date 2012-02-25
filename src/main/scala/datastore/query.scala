@@ -16,7 +16,9 @@ import GQuery.{
 import java.lang.{Iterable => Jit}
 import collection.JavaConversions._
 
-case class Query[A <: Kind](kind: A, query: GQuery) {
+import util.control.Exception.allCatch
+
+case class Query[A <: Kind](kind: A, query: GQuery) extends PreparedQuery[A] {
   private def rebuild() = {
     query.getFilterPredicates().foldLeft(new GQuery(kind.simpleName)) { (in, pred) =>
       in.addFilter(pred.getPropertyName, pred.getOperator, pred.getValue)
@@ -45,12 +47,19 @@ case class Query[A <: Kind](kind: A, query: GQuery) {
     val SortDirective(name, direction) = fun(kind)
     new Query(kind, q.addSort(name, direction))
   }
+}
 
-  def fetch()(implicit ds: DatastoreService): Seq[Entity[A]] = {
-    this.fetch(s => s)(ds)
+trait PreparedQuery[A <: Kind] { self: Query[A] =>
+  def one()(implicit ds: DatastoreService) = {
+    allCatch opt (new Entity(kind, ds.prepare(query).asSingleEntity))
   }
 
-  def fetch(f: FetchOptions => FetchOptions)(implicit ds: DatastoreService) = {
+  def count(f: FetchOptions => FetchOptions = _.limit(1000))(implicit ds: DatastoreService) = {
+    val fts = FetchOptions.Builder.withDefaults()
+    ds.prepare(query).countEntities(f(fts))
+  }
+
+  def fetch(f: FetchOptions => FetchOptions = _.limit(1000))(implicit ds: DatastoreService) = {
     val fts = FetchOptions.Builder.withDefaults()
     ds.prepare(query).asList(f(fts)).toList.map(new Entity(kind, _))
   }
@@ -59,12 +68,6 @@ case class Query[A <: Kind](kind: A, query: GQuery) {
 case class SortDirective(name: String, direction: SD)
 
 case class FilterDirective[A](name: String, op: FO, value: A*)
-
-trait PropertyTest[A] { self: Property[A] =>
-
-  def is(value: A) = (query: GQuery) =>
-    query.addFilter(self.name, FO.EQUAL, value)
-}
 
 trait PropertyDsl[A] { self: Property[A] =>
   protected def wrap[A](op: FO, value: A*) =
