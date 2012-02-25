@@ -50,7 +50,7 @@ val entity = DS entity Person
 // the set method will set properties on the entity
 val philip = entity.set(
   _.firstname := "Philip",
-  _.lastname := "Cali,
+  _.lastname := "Cali",
   _.age := 26
 )
 
