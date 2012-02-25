@@ -45,6 +45,10 @@ class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     val firstname = Property[String]("firstname")
     val lastname = Property[String]("lastname")
     val age = Property[Long]("age")
+
+    def fullname(person: Entity[Person.type]) = {
+      "%s %s".format(person(_.firstname), person(_.lastname))
+    }
   }
 
   "Datastore" should "save persons" in {
