@@ -37,7 +37,9 @@ trait Kind extends DatastoreIntegration {
 trait DatastoreIntegration { self: Kind =>
   type Self = self.type
 
-  def where = Datastore find self.asInstanceOf[Self] where _
+  def query = Datastore find self.asInstanceOf[Self]
+
+  def where = query where _
 
   def get(key: Key)(implicit ds: DatastoreService) =
     Datastore get (self.asInstanceOf[Self], key)

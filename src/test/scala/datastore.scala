@@ -75,6 +75,8 @@ class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
 
     calis.fetch().size should be === 2
     philip.fetch().head(_.age) should be === 26
+
+    Person.query.fetch(_.limit(10)).size should be === 2
   }
 
   it should "delete entries by key" in {
