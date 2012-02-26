@@ -53,10 +53,10 @@ class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
 
   "Datastore" should "save persons" in {
     val dude = Person entity() set(
-      _.firstname := "Some", _.lastname := "Dude", _.age := 97
-    )
-
-    Person save dude
+      _.firstname := "Some",
+      _.lastname := "Dude",
+      _.age := 97
+    ) as (Person save)
 
     val stored = Person get (Person key 3) get
 

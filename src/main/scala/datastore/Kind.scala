@@ -32,6 +32,9 @@ trait Kind extends DatastoreIntegration {
   def key(id: Long) = KeyFactory.createKey(simpleName, id)
 
   def parent(key: Key, id: Long) = KeyFactory.createKey(key, simpleName, id)
+
+  // Convience to save imports
+  def property[A](name: String) = Property[A](name)
 }
 
 trait DatastoreIntegration { self: Kind =>
