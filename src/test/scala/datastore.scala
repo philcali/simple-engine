@@ -13,6 +13,8 @@ import com.google.appengine.tools.development.testing.{
   LocalServiceTestHelper => LocalHelper
 }
 
+import com.google.appengine.api.datastore.Key
+
 class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
   val helper = new LocalHelper(new LocalConfig())
 
@@ -45,6 +47,7 @@ class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     val firstname = Property[String]("firstname")
     val lastname = Property[String]("lastname")
     val age = Property[Long]("age")
+    val spouse = new Property[Option[Key]]("spouse") with OptionConversion[Key]
 
     def fullname(person: Entity[Person.type]) = {
       "%s %s".format(person(_.firstname), person(_.lastname))
@@ -77,6 +80,15 @@ class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     philip.fetch().head(_.age) should be === 26
 
     Person.query.fetch(_.limit(10)).size should be === 2
+  }
+
+  it should "correctly handle option conversion" in {
+    val key = Person get(Person key 1) map { en =>
+      en set (_.spouse := Some(Person key 2)) as (Person save)
+    } get
+
+    Person get key get (_.spouse) map (_.getId) should be === Some(2)
+    Person get (Person key 2) get (_.spouse) should be === None
   }
 
   it should "delete entries by key" in {

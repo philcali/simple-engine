@@ -26,6 +26,18 @@ trait IntegerConversion extends PropConversion[Int] {
   override def fromDatastore(value: Any) = value.toString.toInt
 }
 
+trait OptionConversion[A] extends PropConversion[Option[A]] {
+  def defaultWrapped = Property[A](name)
+
+  override def fromDatastore(value: Any) = {
+    if (value == null) None else Some(defaultWrapped.fromDatastore(value))
+  }
+
+  override def toBackend(value: Option[A]): Any = {
+    if (value.isEmpty) null else value.get
+  }
+}
+
 trait Kind extends DatastoreIntegration {
   def simpleName = this.getClass.getSimpleName
 
