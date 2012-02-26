@@ -5,7 +5,10 @@ import com.google.appengine.api.datastore.{
   Entity => GEntity
 }
 
+// new Entity(Person) or new Entity(Person, entity)
 class Entity[A <: Kind](k: A, en: GEntity) {
+  def this(k: A) = this(k, new GEntity(k.simpleName))
+
   def key = en.getKey()
 
   def kind = k

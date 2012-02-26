@@ -24,15 +24,13 @@ object Datastore {
   }
 
   def get[A <: Kind](kind: A, key: Key)(implicit ds: DatastoreService) = {
-    allCatch.opt(new Entity[A](kind, ds.get(key)))
+    allCatch opt (new Entity[A](kind, ds.get(key)))
   }
 
   def save(en: Entity[_])(implicit ds: DatastoreService) = ds.put(en.entity)
 
   def delete(keys: Key*)(implicit ds: DatastoreService) = ds.delete(keys: _*)
 
-  def find[A <: Kind](kind: A) = {
-    new Query[A](kind, new GQuery(kind.simpleName))
-  }
+  def find[A <: Kind](kind: A) = new Query(kind)
 }
 

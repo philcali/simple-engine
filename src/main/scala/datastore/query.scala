@@ -18,7 +18,13 @@ import collection.JavaConversions._
 
 import util.control.Exception.allCatch
 
-case class Query[A <: Kind](kind: A, query: GQuery) extends PreparedQuery[A] {
+class Query[A <: Kind](k: A, q: GQuery) extends PreparedQuery[A] {
+  def this(k: A) = this(k, new GQuery(k.simpleName))
+
+  def kind = k
+
+  def query = q
+
   private def rebuild() = {
     query.getFilterPredicates().foldLeft(new GQuery(kind.simpleName)) { (in, pred) =>
       in.addFilter(pred.getPropertyName, pred.getOperator, pred.getValue)
