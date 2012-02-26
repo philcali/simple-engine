@@ -45,7 +45,7 @@ object Person extends Kind {
 }
 
 // entity creates an entity
-val entity = DS entity Person
+val entity = Person entity()
 
 // the set method will set properties on the entity
 val philip = entity.set(
@@ -65,19 +65,16 @@ philip as Person.fullname // "Philip Cali"
 val gen = Person key 1
 
 // save will insert or update
-val key = DS save philip
+val key = Person save philip
 
 // get will retrieve a single entity
-DS get (Person, key)
+Person get key
 
 // delete will remove the record
-DS delete key
-
-// find will initiate the query
-val people = DS find Person
+Person delete key
 
 // queries can compose
-val calis = people where (_.lastname is "Cali")
+val calis = Person where (_.lastname is "Cali")
 val calisByAge = calis sort (_.age desc)
 
 // pull with fetch
@@ -87,7 +84,7 @@ calis.fetch()
 calis.fetch(_.limit(10).offset(1))
 
 // Putting it all together
-people where (_.lastname is "Cali") fetch(_.limit(10)) map Person.fullname foreach println
+Person where (_.lastname is "Cali") fetch(_.limit(10)) map Person.fullname foreach println
 ```
 
 ## Known Issues
