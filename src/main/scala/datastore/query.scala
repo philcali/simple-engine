@@ -57,7 +57,8 @@ class Query[A <: Kind](k: A, q: GQuery) extends PreparedQuery[A] {
 
 trait PreparedQuery[A <: Kind] { self: Query[A] =>
   def one()(implicit ds: DatastoreService) = {
-    allCatch opt (new Entity(kind, ds.prepare(query).asSingleEntity))
+    val ens = this.fetch(_.limit(1))
+    if (ens.isEmpty) None else Some(ens.head)
   }
 
   def count(f: FetchOptions => FetchOptions = _.limit(1000))(implicit ds: DatastoreService) = {
@@ -79,8 +80,12 @@ trait PropertyDsl[A] { self: Property[A] =>
   protected def wrap[A](op: FO, value: A*) =
     FilterDirective(self.name, op, value: _*)
 
-  def is(value: A) = wrap(FO.EQUAL, value)
-  def not(value: A) = wrap(FO.NOT_EQUAL, value)
+  def is(value: A): FilterDirective[A] = wrap(FO.EQUAL, value)
+  def is(value: Option[A]) = wrap(FO.EQUAL, value.getOrElse(null))
+
+  def not(value: A): FilterDirective[A] = wrap(FO.NOT_EQUAL, value)
+  def not(value: Option[A]) = wrap(FO.NOT_EQUAL, value.getOrElse(null))
+
   def >(value: A) = wrap(FO.GREATER_THAN, value)
   def >=(value: A) = wrap(FO.GREATER_THAN_OR_EQUAL, value)
   def <(value: A) = wrap(FO.LESS_THAN, value)

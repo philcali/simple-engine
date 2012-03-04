@@ -9,7 +9,7 @@ import com.google.appengine.api.datastore.{
 class Entity[A <: Kind](k: A, en: GEntity) {
   def this(k: A) = this(k, new GEntity(k.simpleName))
 
-  def key = en.getKey()
+  def key = if (en.getKey().isComplete()) Some(en.getKey()) else None
 
   def kind = k
 
@@ -21,7 +21,7 @@ class Entity[A <: Kind](k: A, en: GEntity) {
     new Entity[A](k, e)
   }
 
-  def parent = en.getParent()
+  def parent = if (en.getParent() == null) None else Some(en.getParent())
 
   def appId = en.getAppId
 
@@ -31,9 +31,13 @@ class Entity[A <: Kind](k: A, en: GEntity) {
     funs.foldLeft(this) { (in, fun) => fun(k)(in) }
   }
 
-  def apply[B](fun: (A => PropConversion[B])) = {
+  def apply[B](fun: (A => PropConversion[B])): Option[B] = {
     val prop = fun(k)
-    prop.fromDatastore(en.getProperty(prop.name))
+    if (en.hasProperty(prop.name)) {
+      Some(prop.fromDatastore(en.getProperty(prop.name)))
+    } else {
+      None
+    }
   }
 
   def as[B](fun: Entity[A] => B) = fun(this)

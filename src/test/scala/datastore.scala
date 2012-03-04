@@ -47,9 +47,9 @@ class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     val firstname = Property[String]("firstname")
     val lastname = Property[String]("lastname")
     val age = Property[Long]("age")
-    val spouse = new Property[Option[Key]]("spouse") with OptionConversion[Key]
+    val spouse = Property[Key]("spouse")
 
-    def fullname(person: Entity[Person.type]) = {
+    def fullname(person: Entity[Self]) = {
       "%s %s".format(person(_.firstname), person(_.lastname))
     }
 
@@ -60,13 +60,17 @@ class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
       _.firstname := "Some",
       _.lastname := "Dude",
       _.age := 97
-    ) as (Person save)
+    )
+
+    dude.key should be === None
+
+    Person save dude
 
     val stored = Person get (Person key 3) get
 
-    stored(_.firstname) should be === "Some"
-    stored(_.lastname) should be === "Dude"
-    stored(_.age) should be === 97
+    stored(_.firstname).get should be === "Some"
+    stored(_.lastname).get should be === "Dude"
+    stored(_.age).get should be === 97
 
     stored as (_ => "Woot!") should be === "Woot!"
   }
@@ -78,14 +82,24 @@ class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     val philip = calis and (_.firstname is "Philip")
 
     calis.fetch().size should be === 2
-    philip.fetch().head(_.age) should be === 26
+    philip.fetch().head(_.age).get should be === 26
 
     Person.query.fetch(_.limit(10)).size should be === 2
   }
 
+  it should "retrive a single entity" in {
+    val philip = Person where (_.firstname is "Philip") one()
+
+    philip.get.key.map(_.getId).getOrElse(0) should be === 1
+    
+    val nobody = Person where (_.firstname is "Donatello") one()
+
+    nobody should be === None
+  }
+
   it should "correctly handle option conversion" in {
     val key = Person get(Person key 1) map { en =>
-      en set (_.spouse := Some(Person key 2)) as (Person save)
+      en set (_.spouse := Person key 2) as (Person save)
     } get
 
     Person get key get (_.spouse) map (_.getId) should be === Some(2)
@@ -113,6 +127,6 @@ class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
 
     Datastore save brother
 
-    brother.parent should be === dadKey
+    brother.parent should be === Some(dadKey)
   }
 }
