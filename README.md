@@ -33,14 +33,15 @@ import simplengine.datastore.{
 }
 import DS.service
 
+// A Kind has a Self type, which can be used for helper methods
 object Person extends Kind {
   val firstname = Property[String]("firstname")
   val lastname= Property[String]("lastname")
   val age = Property[Long]("age")
 
   // Convenience method for later
-  def fullname(person: Entity[Person.type]) = {
-    "%s %s".format(person(_.firstname), person(_.lastname))
+  def fullname(person: Entity[Self]) = {
+    "%s %s".format(person(_.firstname).get, person(_.lastname).get)
   }
 }
 
@@ -55,8 +56,9 @@ val philip = entity.set(
 )
 
 // field retrieval
-philip(_.firstname) == "Philip" //true
-philip(_.age) / 13 == 2 // true
+philip(_.firstname).get == "Philip" //true
+philip(_.age).get / 13 == 2 // true
+philip(_.children) == None // true
 
 // use as for conversion
 philip as Person.fullname // "Philip Cali"
@@ -87,16 +89,14 @@ calis.fetch(_.limit(10).offset(1))
 Person where (_.lastname is "Cali") fetch(_.limit(10)) map Person.fullname foreach println
 ```
 
-## Known Issues
+## Appengine Integration
 
-The `Int` type does not come over one for one, unfortunately. Should you absolutely
-need Integers, then you can make use of the `IntegerConversion` mixin for `Property[Int]`.
+All fields are optional by default, and since `simple-engine` is a light
+wrapper over the GAE datastore, all fields return the option of what's
+expected.
 
-It would look something like:
-
-```
-val age = new Property[Int]("age") with IntegerConversion // now it'll work!
-```
+As far as field types, it makes no translation to Scala types. The same
+restriction exists on `simple-engine`.
 
 ## The Future
 
