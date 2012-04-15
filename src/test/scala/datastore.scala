@@ -87,7 +87,7 @@ class DatastoreSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     Person.query.fetch(_.limit(10)).size should be === 2
   }
 
-  it should "retrive a single entity" in {
+  it should "retrieve a single entity" in {
     val philip = Person where (_.firstname is "Philip") one()
 
     philip.get.key.map(_.getId).getOrElse(0) should be === 1
